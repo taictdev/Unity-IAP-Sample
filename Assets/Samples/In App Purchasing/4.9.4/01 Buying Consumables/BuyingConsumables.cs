@@ -11,11 +11,13 @@ namespace Samples.Purchasing.Core.BuyingConsumables
         IStoreController m_StoreController; // The Unity Purchasing system.
 
         //Your products IDs. They should match the ids of your products in your store.
-        public string goldProductId = "com.mycompany.mygame.gold1";
-        public string diamondProductId = "com.mycompany.mygame.diamond1";
+        public const string goldProductId = "com.unity.gold1";
+        public const string diamondProductId = "com.unity.diamond1";
+        public const string removeAdsProductId = "com.unity.remove_ads";
 
         public Text GoldCountText;
         public Text DiamondCountText;
+        public Image ImgAds;
 
         int m_GoldCount;
         int m_DiamondCount;
@@ -33,7 +35,8 @@ namespace Samples.Purchasing.Core.BuyingConsumables
             //Add products that will be purchasable and indicate its type.
             builder.AddProduct(goldProductId, ProductType.Consumable);
             builder.AddProduct(diamondProductId, ProductType.Consumable);
-
+            builder.AddProduct(removeAdsProductId, ProductType.NonConsumable);
+            //builder.useCatalogProvider = true;
             UnityPurchasing.Initialize(this, builder);
         }
 
@@ -45,6 +48,11 @@ namespace Samples.Purchasing.Core.BuyingConsumables
         public void BuyDiamond()
         {
             m_StoreController.InitiatePurchase(diamondProductId);
+        }
+
+        public void BuyRemoveAds()
+        {
+            m_StoreController.InitiatePurchase(removeAdsProductId);
         }
 
         public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
@@ -76,19 +84,36 @@ namespace Samples.Purchasing.Core.BuyingConsumables
             var product = args.purchasedProduct;
 
             //Add the purchased product to the players inventory
-            if (product.definition.id == goldProductId)
+            switch (product.definition.id)
             {
-                AddGold();
-            }
-            else if (product.definition.id == diamondProductId)
-            {
-                AddDiamond();
+                case goldProductId:
+                    {
+                        AddGold();
+                        break;
+                    }
+                case diamondProductId:
+                    {
+                        AddDiamond();
+                        break;
+                    }
+                case removeAdsProductId:
+                    {
+                        HideAds();
+                        break;
+                    }
+                default:
+                    break;
             }
 
             Debug.Log($"Purchase Complete - Product: {product.definition.id}");
 
             //We return Complete, informing IAP that the processing on our side is done and the transaction can be closed.
             return PurchaseProcessingResult.Complete;
+        }
+
+        private void HideAds()
+        {
+            ImgAds.gameObject.SetActive(false);
         }
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
